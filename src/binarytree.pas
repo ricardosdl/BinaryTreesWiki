@@ -20,14 +20,14 @@ type
 
   TCompareFunction = function(Item1, Item2: Pointer): TComparisonResult;
 
-  function BinaryTreeInit(Value: Pointer): PNode;
-  function BinaryTreeAdd(Root: PNode; Value: Pointer; CompareFunction: TCompareFunction): Boolean;
-  procedure PrintNode(Root: PNode);
+  function BinaryTreeCreateNode(Value: Pointer): PNode;
+  function BinaryTreeAdd(Root: PNode; Value: Pointer; CompareFunction: TCompareFunction): PNode;
+  function BinaryTreeToString(Root: PNode): String;
 
 
 implementation
 
-function BinaryTreeInit(Value: Pointer): PNode;
+function BinaryTreeCreateNode(Value: Pointer): PNode;
 begin
   New(Result);
   if Result = Nil then
@@ -39,30 +39,46 @@ begin
 end;
 
 function BinaryTreeAdd(Root: PNode; Value: Pointer;
-  CompareFunction: TCompareFunction): Boolean;
+  CompareFunction: TCompareFunction): PNode;
 begin
   if Root = Nil then
   begin
-    Root := BinaryTreeInit(Value);
+    Root := BinaryTreeCreateNode(Value);
     if Root = Nil then
     begin
       //error here
-      Exit(False);
+      Exit(Root);
     end;
 
-    Exit(True);
+    Exit(Root);
 
   end;
 
-  if CompareFunction(Root^.Value, Value) in [LessThan, Equal] then
-    Result := BinaryTreeAdd(Root^.Left, Value, CompareFunction)
+  if CompareFunction(Value, Root^.Value) in [LessThan, Equal] then
+  begin
+    Result := BinaryTreeAdd(Root^.Left, Value, CompareFunction);
+    Root^.Left := Result;
+  end
   else
+  begin
     Result := BinaryTreeAdd(Root^.Right, Value, CompareFunction);
+    Root^.Right := Result;
+  end;
 end;
 
-procedure PrintNode(Root: PNode);
+function BinaryTreeToString(Root: PNode): String;
+var
+  Value: Longint;
 begin
-  Write('{Value:', Root^.Value);
+  if Root = Nil then
+  begin
+    Exit('');
+  end;
+  Value := PLongint(Root^.Value)^;
+  Result := '{Value:' + IntToStr(Value) + ',';
+  Result := Result + 'Left:' + BinaryTreeToString(Root^.Left) + ',';
+  Result := Result + 'Right:' + BinaryTreeToString(Root^.Right) + '}';
+
 end;
 
 end.
