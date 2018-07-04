@@ -1,7 +1,7 @@
 {$mode objfpc}{$H+}{$J-}
 program BinaryTreesWiki;
 
-uses BinaryTree;
+uses Classes, sysutils, BinaryTree;
 
 function CompareLongints(Longint1, Longint2: Pointer): TComparisonResult;
 begin
@@ -16,25 +16,42 @@ end;
 var
   Root: PNode;
   MyArray: array of LongInt;
+  i: Longint;
+  Structure: TBits;
+  Data: TFPList;
 begin
 
-  SetLength(MyArray, 5);
+  Structure := TBits.Create();
+  Data := TFPList.Create();
 
-  MyArray[0] := 4;
-  MyArray[1] := 4;
-  MyArray[2] := 1;
-  MyArray[3] := 2;
-  MyArray[4] := 5;
+  Randomize;
+
+  SetLength(MyArray, 10);
+
+  for i := Low(MyArray) to High(MyArray) do
+  begin
+    MyArray[i] := Random(10);
+  end;
 
   Root := BinaryTreeCreateNode(@MyArray[0]);
-  BinaryTreeAdd(Root, @MyArray[1], @CompareLongints);
-  BinaryTreeAdd(Root, @MyArray[2], @CompareLongints);
-  BinaryTreeAdd(Root, @MyArray[3], @CompareLongints);
-  BinaryTreeAdd(Root, @MyArray[4], @CompareLongints);
+  for i := Low(MyArray) + 1 to High(MyArray) do
+  begin
+    BinaryTreeAdd(Root, @MyArray[i], @CompareLongints);
+  end;
 
   WriteLn(BinaryTreeToString(Root));
 
+  BinaryTreeEncode(Root, Structure, Data);
+
+  WriteLn('Structure size:', Structure.Size);
+  WriteLn('Data size:', Data.Count);
+
+
   ReadLn;
+
+  BinaryTreeDestroy(Root);
+  FreeAndNil(Structure);
+  FreeAndNil(Data);
 
 
 

@@ -21,8 +21,11 @@ type
   TCompareFunction = function(Item1, Item2: Pointer): TComparisonResult;
 
   function BinaryTreeCreateNode(Value: Pointer): PNode;
+  procedure BinaryTreeDestroy(Root: PNode);
   function BinaryTreeAdd(Root: PNode; Value: Pointer; CompareFunction: TCompareFunction): PNode;
   function BinaryTreeToString(Root: PNode): String;
+  procedure BinaryTreeEncode(Node: PNode; Structure: TBits; Data: TFPList);
+  function BinaryTreeDecode(Structure: TBits; Data: TFPList): PNode;
 
 
 implementation
@@ -38,31 +41,50 @@ begin
   Result^.Value := Value;
 end;
 
+procedure BinaryTreeDestroy(Root: PNode);
+begin
+  if (Root^.Left = Nil) and (Root^.Right = Nil) then
+  begin
+    Dispose(Root);
+    Exit;
+  end;
+
+  if Root^.Left <> Nil then
+    BinaryTreeDestroy(Root^.Left);
+
+  if Root^.Right <> Nil then
+    BinaryTreeDestroy(Root^.Right);
+
+  Dispose(Root);
+
+end;
+
 function BinaryTreeAdd(Root: PNode; Value: Pointer;
   CompareFunction: TCompareFunction): PNode;
 begin
-  if Root = Nil then
-  begin
-    Root := BinaryTreeCreateNode(Value);
-    if Root = Nil then
-    begin
-      //error here
-      Exit(Root);
-    end;
-
-    Exit(Root);
-
-  end;
-
   if CompareFunction(Value, Root^.Value) in [LessThan, Equal] then
   begin
-    Result := BinaryTreeAdd(Root^.Left, Value, CompareFunction);
-    Root^.Left := Result;
+    if Root^.Left = Nil then
+    begin
+      Result := BinaryTreeCreateNode(Value);
+      if Result = Nil then
+        Exit(Result);
+      Root^.Left := Result;
+    end
+    else
+      Result := BinaryTreeAdd(Root^.Left, Value, CompareFunction);
   end
   else
   begin
-    Result := BinaryTreeAdd(Root^.Right, Value, CompareFunction);
-    Root^.Right := Result;
+    if Root^.Right = Nil then
+    begin
+      Result := BinaryTreeCreateNode(Value);
+      if Result = Nil then
+        Exit(Result);
+      Root^.Right := Result;
+    end
+    else
+      Result := BinaryTreeAdd(Root^.Right, Value, CompareFunction);
   end;
 end;
 
@@ -72,13 +94,31 @@ var
 begin
   if Root = Nil then
   begin
-    Exit('');
+    Exit('""');
   end;
   Value := PLongint(Root^.Value)^;
-  Result := '{Value:' + IntToStr(Value) + ',';
-  Result := Result + 'Left:' + BinaryTreeToString(Root^.Left) + ',';
-  Result := Result + 'Right:' + BinaryTreeToString(Root^.Right) + '}';
+  Result := '{"Value":' + IntToStr(Value) + ',';
+  Result := Result + '"Left":' + BinaryTreeToString(Root^.Left) + ',';
+  Result := Result + '"Right":' + BinaryTreeToString(Root^.Right) + '}';
 
+end;
+
+procedure BinaryTreeEncode(Node: PNode; Structure: TBits; Data: TFPList);
+begin
+  if Node = Nil then
+    Structure.Clear(Structure.Size)
+  else
+  begin
+    Structure.SetOn(Structure.Size);
+    Data.Add(Node^.Value);
+    BinaryTreeEncode(Node^.Left, Structure, Data);
+    BinaryTreeEncode(Node^.Right, Structure, Data);
+  end;
+end;
+
+function BinaryTreeDecode(Structure: TBits; Data: TFPList): PNode;
+begin
+  Result := Nil;
 end;
 
 end.
