@@ -5,7 +5,7 @@ unit BinaryTree;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, gvector;
 
 type
   PPNode = ^PNode;
@@ -20,12 +20,14 @@ type
 
   TCompareFunction = function(Item1, Item2: Pointer): TComparisonResult;
 
+  TStructure = specialize TVector<Byte>;
+
   function BinaryTreeCreateNode(Value: Pointer): PNode;
   procedure BinaryTreeDestroy(Root: PNode);
   function BinaryTreeAdd(Root: PNode; Value: Pointer; CompareFunction: TCompareFunction): PNode;
   function BinaryTreeToString(Root: PNode): String;
-  procedure BinaryTreeEncode(Node: PNode; Structure: TBits; Data: TFPList);
-  function BinaryTreeDecode(Structure: TBits; Data: TFPList; CurrentStructureIndex: Longint = 0): PNode;
+  procedure BinaryTreeEncode(Node: PNode; Structure: TStructure; Data: TFPList);
+  function BinaryTreeDecode(Structure: TStructure; Data: TFPList): PNode;
 
 
 implementation
@@ -103,36 +105,34 @@ begin
 
 end;
 
-procedure BinaryTreeEncode(Node: PNode; Structure: TBits; Data: TFPList);
+procedure BinaryTreeEncode(Node: PNode; Structure: TStructure; Data: TFPList);
 begin
   if Node = Nil then
-    Structure.Clear(Structure.Size)
+    Structure.PushBack(0)
   else
   begin
-    Structure.SetOn(Structure.Size);
+    Structure.PushBack(1);
     Data.Add(Node^.Value);
     BinaryTreeEncode(Node^.Left, Structure, Data);
     BinaryTreeEncode(Node^.Right, Structure, Data);
   end;
 end;
 
-function BinaryTreeDecode(Structure: TBits; Data: TFPList;
-  CurrentStructureIndex: Longint): PNode;
+function BinaryTreeDecode(Structure: TStructure; Data: TFPList): PNode;
 var
-  b: Boolean;
+  b: Byte;
   Node: PNode;
   Value: Pointer;
 begin
   //Structure.b;
-  b := Structure.Get(CurrentStructureIndex);
-  Inc(CurrentStructureIndex);
-  if b then
+  b := Structure.Items[0];
+  Structure.Erase(0);
+  if b = 1 then
   begin
     Value := Data.Extract(Data.First());
     Node := BinaryTreeCreateNode(Value);
-    Node^.Left := BinaryTreeDecode(Structure, Data, CurrentStructureIndex);
-    Inc(CurrentStructureIndex);
-    Node^.Right := BinaryTreeDecode(Structure, Data, CurrentStructureIndex);
+    Node^.Left := BinaryTreeDecode(Structure, Data);
+    Node^.Right := BinaryTreeDecode(Structure, Data);
     Result := Node;
   end
   else

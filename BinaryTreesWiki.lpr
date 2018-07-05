@@ -14,14 +14,14 @@ begin
 end;
 
 var
-  Root: PNode;
+  Root, Node: PNode;
   MyArray: array of LongInt;
   i: Longint;
-  Structure: TBits;
+  Structure: TStructure;
   Data: TFPList;
 begin
 
-  Structure := TBits.Create();
+  Structure := TStructure.Create();
   Data := TFPList.Create();
 
   Randomize;
@@ -46,10 +46,17 @@ begin
   WriteLn('Structure size:', Structure.Size);
   WriteLn('Data size:', Data.Count);
 
+  Node := BinaryTreeDecode(Structure, Data);
+
+  WriteLn(BinaryTreeToString(Node));
+
+
+
 
   ReadLn;
 
   BinaryTreeDestroy(Root);
+  BinaryTreeDestroy(Node);
   FreeAndNil(Structure);
   FreeAndNil(Data);
 
