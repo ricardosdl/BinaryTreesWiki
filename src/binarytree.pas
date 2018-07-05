@@ -25,7 +25,7 @@ type
   function BinaryTreeAdd(Root: PNode; Value: Pointer; CompareFunction: TCompareFunction): PNode;
   function BinaryTreeToString(Root: PNode): String;
   procedure BinaryTreeEncode(Node: PNode; Structure: TBits; Data: TFPList);
-  function BinaryTreeDecode(Structure: TBits; Data: TFPList): PNode;
+  function BinaryTreeDecode(Structure: TBits; Data: TFPList; CurrentStructureIndex: Longint = 0): PNode;
 
 
 implementation
@@ -116,9 +116,27 @@ begin
   end;
 end;
 
-function BinaryTreeDecode(Structure: TBits; Data: TFPList): PNode;
+function BinaryTreeDecode(Structure: TBits; Data: TFPList;
+  CurrentStructureIndex: Longint): PNode;
+var
+  b: Boolean;
+  Node: PNode;
+  Value: Pointer;
 begin
-  Result := Nil;
+  //Structure.b;
+  b := Structure.Get(CurrentStructureIndex);
+  Inc(CurrentStructureIndex);
+  if b then
+  begin
+    Value := Data.Extract(Data.First());
+    Node := BinaryTreeCreateNode(Value);
+    Node^.Left := BinaryTreeDecode(Structure, Data, CurrentStructureIndex);
+    Inc(CurrentStructureIndex);
+    Node^.Right := BinaryTreeDecode(Structure, Data, CurrentStructureIndex);
+    Result := Node;
+  end
+  else
+    Result := Nil;
 end;
 
 end.
